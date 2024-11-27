@@ -1,5 +1,3 @@
-import java.io.*;
-import java.util.ArrayList;
 import java.util.Scanner;
 
 // Pricing Strategy Interface for Bridge Pattern
@@ -119,8 +117,39 @@ class RoomHolder {
     Room[] deluxeSingleRooms = new Room[20];
 }
 
+//Added Factory Class
+class RoomFactory {
+    public static Room createRoom(String roomType, PricingStrategy pricingStrategy) {
+        switch (roomType.toLowerCase()) {
+            case "luxury single":
+                return new SingleRoom(pricingStrategy);
+            case "deluxe single":
+                return new SingleRoom(pricingStrategy);
+            case "luxury double":
+                return new DoubleRoom(pricingStrategy);
+            case "deluxe double":
+                return new DoubleRoom(pricingStrategy);
+            default:
+                throw new IllegalArgumentException("Invalid room type: " + roomType);
+        }
+    }
+}
+
 // Hotel Management Class
 class Hotel {
+    //Added Singlton Pattern
+    private static Hotel instance;
+
+    private Hotel() {
+    }
+
+    public static Hotel getInstance() {
+        if (instance == null) {
+            instance = new Hotel();
+        }
+        return instance;
+    }
+
     static RoomHolder roomHolder = new RoomHolder();
     static Scanner sc = new Scanner(System.in);
 
@@ -182,26 +211,44 @@ class Hotel {
         String contact = sc.next();
         System.out.println("Enter gender: ");
         String gender = sc.next();
-
+    
         PricingStrategy pricingStrategy = new StandardPricing();
         Room room;
+        String roomTypeName;
+    
         if (roomType == 1) {
-            room = new DoubleRoom(pricingStrategy);
-            for (int i = 0; i < roomHolder.luxuryDoubleRooms.length; i++) {
-                if (roomHolder.luxuryDoubleRooms[i] == null) {
-                    roomHolder.luxuryDoubleRooms[i] = room;
-                    System.out.println("Room booked successfully.");
-                    return;
-                }
-            }
+            roomTypeName = "luxury double";
         } else if (roomType == 2) {
-            room = new DoubleRoom(pricingStrategy);
-            for (int i = 0; i < roomHolder.deluxeDoubleRooms.length; i++) {
-                if (roomHolder.deluxeDoubleRooms[i] == null) {
-                    roomHolder.deluxeDoubleRooms[i] = room;
-                    System.out.println("Room booked successfully.");
-                    return;
-                }
+            roomTypeName = "deluxe double";
+        } else if (roomType == 3) {
+            roomTypeName = "luxury single";
+        } else if (roomType == 4) {
+            roomTypeName = "deluxe single";
+        } else {
+            System.out.println("Invalid room type.");
+            return;
+        }
+    
+        room = RoomFactory.createRoom(roomTypeName, pricingStrategy);
+    
+        Room[] rooms = switch (roomType) {
+            case 1 -> roomHolder.luxuryDoubleRooms;
+            case 2 -> roomHolder.deluxeDoubleRooms;
+            case 3 -> roomHolder.luxurySingleRooms;
+            case 4 -> roomHolder.deluxeSingleRooms;
+            default -> null;
+        };
+    
+        if (rooms == null) {
+            System.out.println("Invalid room type.");
+            return;
+        }
+    
+        for (int i = 0; i < rooms.length; i++) {
+            if (rooms[i] == null) {
+                rooms[i] = room;
+                System.out.println("Room booked successfully.");
+                return;
             }
         }
         System.out.println("No rooms available.");
